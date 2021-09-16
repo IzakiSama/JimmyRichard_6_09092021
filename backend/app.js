@@ -1,4 +1,16 @@
 const express = require('express');
+// const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+const path = require('path');
+
+const sauceRoutes = require('./routes/sauce');
+const userRoutes = require('./routes/user');
+
+mongoose.connect('mongodb+srv://Stitch:exp626@cluster0.3ojhb.mongodb.net/myFirstDatabase?retryWrites=true&w=majority',
+  { useNewUrlParser: true,
+    useUnifiedTopology: true })
+  .then(() => console.log('Connexion à MongoDB réussie !'))
+  .catch(() => console.log('Connexion à MongoDB échouée !'));
 
 const app = express();
 
@@ -9,26 +21,12 @@ app.use((req, res, next) => {
   next();
 });
 
+// app.use(bodyParser.json());
 app.use(express.urlencoded({extended: true}));
-app.use(express.json());
+// app.use(express.json());
 
-app.use((req, res, next) => {
-  console.log('Requête reçue !');
-  next();
-});
-
-app.use((req, res, next) => {
-  res.status(201);
-  next();
-});
-
-app.use((req, res, next) => {
-  res.json({ message: 'Votre requête a bien été reçue !' });
-  next();
-});
-
-app.use((req, res, next) => {
-  console.log('Réponse envoyée avec succès !');
-});
+app.use('/images', express.static(path.join(__dirname, 'images')));
+app.use('/api/sauces', sauceRoutes);
+app.use('/api/auth', userRoutes);
 
 module.exports = app;
