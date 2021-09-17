@@ -23,7 +23,7 @@ app.use((req, res, next) => {
 
 // app.use(bodyParser.json());
 app.use(express.urlencoded({extended: true}));
-// app.use(express.json());
+app.use(express.json());
 
 app.use('/images', express.static(path.join(__dirname, 'images')));
 app.use('/api/sauces', sauceRoutes);
