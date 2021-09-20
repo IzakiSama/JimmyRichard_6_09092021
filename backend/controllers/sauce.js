@@ -6,7 +6,9 @@ exports.createSauce = (req, res, next) => {
   delete sauceObject._id;
   const sauce = new Sauce({
     ...sauceObject,
-    imageUrl:`${ req.protocol }://${ req.get('host') }/images/${ req.file.filename }`
+    imageUrl:`${ req.protocol }://${ req.get('host') }/images/${ req.file.filename }`,
+    likes : 0,
+    dislikes : 0
   });
   sauce.save()
     .then(() => res.status(201).json({ message: 'Objet enregistré !' }))
@@ -50,16 +52,23 @@ exports.getAllSauces = (req, res, next) => {
 };
 
 exports.likeSauce = (req, res, next) => {
-  let userId = req.body.userId, like = req.body.like;
+  let userId = req.body.userId;
+  let like = req.body.likes;
   
+  // console.log(userId)
+  // console.log(like)
+  // console.log(req.body)
+
   Sauce.findOne({ _id: req.params.id }).exec(function (error, sauce) {
-    let msg = "", userLike = sauce.usersLiked.indexOf(userId), userDisliked = sauce.usersDisliked.indexOf(userId);
+    let msg = "";
+    let userLike = sauce.usersLiked.indexOf(userId);
+    let userDisliked = sauce.usersDisliked.indexOf(userId);
     
-    if (like == 0 && userLike >-1) {
+    if (like == 0 && userLike > -1) {
       sauce.likes--;
       sauce.usersLiked.splice(userLike, 1);
       msg = "Unliked !";
-    } else if (like == 0 && userDisliked >-1) {
+    } else if (like == 0 && userDisliked > -1) {
       sauce.dislikes--;
       sauce.usersDisliked.splice(userDisliked, 1);
       msg = "Undisliked !";
@@ -67,6 +76,9 @@ exports.likeSauce = (req, res, next) => {
 
     if (like == 1) {
       sauce.likes++;
+
+      // console.log(likes)
+
       if (sauce.usersLiked.length == 0) {
         sauce.usersLiked=[userId];
       } else {
