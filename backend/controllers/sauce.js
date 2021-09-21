@@ -8,7 +8,9 @@ exports.createSauce = (req, res, next) => {
     ...sauceObject,
     imageUrl:`${ req.protocol }://${ req.get('host') }/images/${ req.file.filename }`,
     likes : 0,
-    dislikes : 0
+    dislikes : 0,
+    usersLiked: [''],
+    usersDisliked: ['']
   });
   sauce.save()
     .then(() => res.status(201).json({ message: 'Objet enregistré !' }))
@@ -53,52 +55,51 @@ exports.getAllSauces = (req, res, next) => {
 
 exports.likeSauce = (req, res, next) => {
   let userId = req.body.userId;
-  let like = req.body.likes;
+  let like = req.body.like;
   
-  // console.log(userId)
-  // console.log(like)
+  // console.log("ID : " + userId)
+  // console.log("like : " + like)
   // console.log(req.body)
 
-  Sauce.findOne({ _id: req.params.id }).exec(function (error, sauce) {
-    let msg = "";
-    let userLike = sauce.usersLiked.indexOf(userId);
-    let userDisliked = sauce.usersDisliked.indexOf(userId);
-    
-    if (like == 0 && userLike > -1) {
-      sauce.likes--;
-      sauce.usersLiked.splice(userLike, 1);
-      msg = "Unliked !";
-    } else if (like == 0 && userDisliked > -1) {
-      sauce.dislikes--;
-      sauce.usersDisliked.splice(userDisliked, 1);
-      msg = "Undisliked !";
-    };
+  Sauce.findOne({ _id: req.params.id })
+    .then(sauce => {
+      let msg = "";
+      let userLike = sauce.usersLiked.indexOf(userId);
+      let userDisliked = sauce.usersDisliked.indexOf(userId);
+      
+      if (like == 0 && userLike > -1) {
+        sauce.likes--;
+        sauce.usersLiked.splice(userLike, 1);
+        msg = "Unliked !";
+      } else if (like == 0 && userDisliked > -1) {
+        sauce.dislikes--;
+        sauce.usersDisliked.splice(userDisliked, 1);
+        msg = "Undisliked !";
+      };
 
-    if (like == 1) {
-      sauce.likes++;
+      if (like == 1) {
+        sauce.likes++;
+        if (sauce.usersLiked.length == 0) {
+          sauce.usersLiked=[userId];
+        } else {
+          sauce.usersLiked.push(userId);
+        }
+        msg = "Like pris en compte !";
+      };
+      
+      if (like == -1) {
+        sauce.dislikes++;
+        if (sauce.usersDisliked.length == 0) {
+          sauce.usersDisliked=[userId];
+        } else {
+          sauce.usersDisliked.push(userId);
+        }
+        msg = "Dislike pris en compte !";
+      };
 
-      // console.log(likes)
-
-      if (sauce.usersLiked.length == 0) {
-        sauce.usersLiked=[userId];
-      } else {
-        sauce.usersLiked.push(userId);
-      }
-      msg = "Like pris en compte !";
-    };
-
-    if (like == -1) {
-      sauce.dislikes++;
-      if (sauce.usersDisliked.length == 0) {
-        sauce.usersDisliked=[userId];
-      } else {
-        sauce.usersDisliked.push(userId);
-      }
-      msg = "Dislike pris en compte !";
-    };
-
-    sauce.save()
-      .then(() => res.status(201).json({ message: msg }))
-      .catch(error => res.status(400).json({ error }));
-  });
+      sauce.save()
+        .then(() => res.status(201).json({ message: msg }))
+        .catch(error => res.status(400).json({ error }));
+      })
+    .catch(error => res.status(400).json({ error }));
 };
